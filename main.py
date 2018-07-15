@@ -114,3 +114,7 @@ def __update__():
         colors.success("cleaned up!")
     else:
         colors.success("no updates found for package `swagger-ui`")
+
+
+if __name__ == "__main__":
+    __update__()
