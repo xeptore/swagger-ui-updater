@@ -32,6 +32,7 @@ def __download__(url, filename):
     sys.stdout.write('\n')
     return out_file
 
+
 def __update__():
     # existence of `package.json` file
     if not Path("package.json").is_file():
