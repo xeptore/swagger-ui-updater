@@ -36,7 +36,7 @@ def __download__(url, filename):
 def __update__():
     # existence of `package.json` file
     if not Path("package.json").is_file():
-        colors.panic("not found `package.json`")
+        colors.panic("Not found 'package.json'.")
 
     # loading `package.json`
     with open("package.json") as f:
@@ -44,9 +44,10 @@ def __update__():
 
     # checking existence and validation of `swagger-ui` key value
     if "swagger-ui" not in package:
-        colors.panic("not found 'swagger-ui' in `package.json`")
+        colors.print_err("Not found 'swagger-ui' in 'package.json'.")
+        package["swagger-ui"] = "0"
     elif str(package["swagger-ui"]).startswith("v") or len(str(package["swagger-ui"]).split(".")) != 3 or False in [x.isdigit() for x in str(package["swagger-ui"]).split(".")]:
-        colors.panic("invalid 'swagger-ui' value in `package.json` ({})".format(package["swagger-ui"]))
+        colors.panic("Invalid 'swagger-ui' value in 'package.json' ({}).".format(package["swagger-ui"]))
 
     # existence and fix `api-doc` path
     if "api-doc" in package:
@@ -65,14 +66,14 @@ def __update__():
 
     # checking response
     if not res.ok:
-        colors.panic("error occurred in getting Swagger UI releases info")
+        colors.panic("Error occurred in getting Swagger UI releases info.")
 
     # converting `bytes` type response to Python `dict`
     data = json.loads(res.text)
 
     # checking whether response has required fields
     if "tag_name" not in data or "tarball_url" not in data:
-        colors.panic("Invalid response received")
+        colors.panic("Invalid response received from Github.")
 
 
     """
@@ -84,13 +85,13 @@ def __update__():
       4. remove both archive package and unnecessary extracted files  
     """
     if package["swagger-ui"] < data["tag_name"][1:]:
-        colors.warning("update found ({})".format(data["tag_name"]))
-        colors.warning("downloading tar package... ({})".format(data["tarball_url"]))
+        colors.warning("Newer release found ({})".format(data["tag_name"]))
+        colors.warning("Downloading tar package... ({})".format(data["tarball_url"]))
 
         extract_dir = "swagger-ui-" + data["tag_name"]
         # downloading
         downloaded_file = __download__(data["tarball_url"], extract_dir + ".tar.gz")
-        colors.warning("extracting package into '{}'...".format(destination))
+        colors.warning("Extracting package into '{}'...".format(destination))
 
         # extracting
         tar = tarfile.open(downloaded_file.name, "r:gz")
@@ -106,14 +107,21 @@ def __update__():
         for f in files:
             shutil.move(os.path.join(src, f), os.path.join(destination, f))
 
-        colors.success("extracted into `" + destination + "`")
+        colors.success("Extracted into '{}'.".format(destination))
 
         # cleaning up
         shutil.rmtree(extract_dir, ignore_errors=True)
         os.remove(extract_dir + ".tar.gz")
-        colors.success("cleaned up!")
+        colors.success("Cleaned up!")
+
+        # updating `package.json`
+        package["swagger-ui"] = data["tag_name"][1:]
+        with open("package.json", "w") as p:
+            json.dump(package, p, indent=2)
+        colors.success("'package.json' updated.")
+
     else:
-        colors.success("no updates found for package `swagger-ui`")
+        colors.success("No updates found for package `swagger-ui`. Current: {} - Latest: {}".format(package["swagger-ui"], data["tag_name"][1:]))
 
 
 if __name__ == "__main__":
