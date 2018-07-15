@@ -3,11 +3,64 @@ import json
 import shutil
 import tarfile
 import os
-import colors
 import sys
 from pathlib import Path
 
 
+""" Provide basic colored console print functions
+Available types:
+*  `print_err` --> prints 'message' with a red color.
+*  `warning` --> prints 'message' with a yellow color.
+*  `success` -- > prints 'message' with a green color.
+
+All of these bright up 'title' text if provided.
+"""
+class Colors:
+
+    class Intensives:
+        Red = 9
+        Green = 10
+        Yellow = 11
+        Blue = 12
+        Pink = 13
+        Cyan = 14
+
+    
+    class Standards:
+        Red = 1
+        Green = 2
+        Yellow = 3
+        Blue = 4
+        Pink = 5
+        Cyan = 6
+    
+    
+    def print_err(self, error):
+        self.__print_colored__(foreground_color=self.Intensives.Red, title="Error", message=error)
+    
+    
+    def panic(self, error):
+        self.print_err(error)
+        exit(0)
+    
+    
+    def warning(self, message):
+        self.__print_colored__(foreground_color=self.Intensives.Yellow, message=message)
+    
+    
+    def success(self, message):
+        self.__print_colored__(foreground_color=self.Intensives.Green, message=message)
+    
+    
+    def __print_colored__(self, foreground_color, message, title=""):
+        if len(title) > 0:
+            print("\033[1;38;5;{}m{}: \033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, title, foreground_color, message))
+        else:
+            print("\033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, message))
+
+
+
+colors = Colors()
 # Downloads from `url`, save it in `filename`, and return written file instance
 # Also print download progress
 def __download__(url, filename):
@@ -36,7 +89,7 @@ def __download__(url, filename):
 def __update__():
     # existence of `package.json` file
     if not Path("package.json").is_file():
-        colors.panic("Not found 'package.json'.")
+        colors.panic(error="Not found 'package.json'.")
 
     # loading `package.json`
     with open("package.json") as f:
