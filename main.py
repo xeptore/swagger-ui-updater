@@ -15,8 +15,9 @@ Available types:
 
 All of these bright up 'title' text if provided.
 """
-class Colors:
 
+
+class Colors:
     class Intensives:
         Red = 9
         Green = 10
@@ -25,7 +26,6 @@ class Colors:
         Pink = 13
         Cyan = 14
 
-    
     class Standards:
         Red = 1
         Green = 2
@@ -34,35 +34,32 @@ class Colors:
         Pink = 5
         Cyan = 6
     
-    
     def print_err(self, error):
         self.__print_colored__(foreground_color=self.Intensives.Red, title="Error", message=error)
-    
-    
+
     def panic(self, error):
         self.print_err(error)
         exit(0)
-    
-    
+
     def warning(self, message):
         self.__print_colored__(foreground_color=self.Intensives.Yellow, message=message)
-    
-    
+
     def success(self, message):
         self.__print_colored__(foreground_color=self.Intensives.Green, message=message)
-    
-    
-    def __print_colored__(self, foreground_color, message, title=""):
+
+    @staticmethod
+    def __print_colored__(foreground_color, message, title=""):
         if len(title) > 0:
             print("\033[1;38;5;{}m{}: \033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, title, foreground_color, message))
         else:
             print("\033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, message))
 
 
-
 colors = Colors()
 # Downloads from `url`, save it in `filename`, and return written file instance
 # Also print download progress
+
+
 def __download__(url, filename):
     with open(filename, 'wb') as out_file:
         response = requests.get(url, stream=True)
