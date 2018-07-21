@@ -6,7 +6,6 @@ import os
 import sys
 from pathlib import Path
 
-
 """ Provide basic colored console print functions
 Available types:
 *  `print_err` --> prints 'message' with a red color.
@@ -33,7 +32,7 @@ class Colors:
         Blue = 4
         Pink = 5
         Cyan = 6
-    
+
     def print_err(self, error):
         self.__print_colored__(foreground_color=self.Intensives.Red, title="Error", message=error)
 
@@ -50,12 +49,15 @@ class Colors:
     @staticmethod
     def __print_colored__(foreground_color, message, title=""):
         if len(title) > 0:
-            print("\033[1;38;5;{}m{}: \033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, title, foreground_color, message))
+            print("\033[1;38;5;{}m{}: \033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, title, foreground_color,
+                                                                           message))
         else:
             print("\033[0;38;5;{}m{}\033[0;0;0m".format(foreground_color, message))
 
 
 colors = Colors()
+
+
 # Downloads from `url`, save it in `filename`, and return written file instance
 # Also print download progress
 
@@ -75,12 +77,21 @@ def __download__(url, filename):
             for d in response.iter_content(chunk_size=128):
                 downloaded += len(d)
                 out_file.write(d)
-                percent = int(downloaded/total*100)
-                done = int(columns*downloaded/total)
-                sys.stdout.write('\r[{}{}] %{}'.format('█' * done, '.' * (columns-done), percent))
+                percent = int(downloaded / total * 100)
+                done = int(columns * downloaded / total)
+                sys.stdout.write('\r[{}{}] %{}'.format('█' * done, '.' * (columns - done), percent))
                 sys.stdout.flush()
     sys.stdout.write('\n')
     return out_file
+
+
+def __newer_version_exists(local, remote):
+    remote = [int(x) for x in str(remote).split(".")]
+    local = [int(x) for x in str(local).split(".")]
+    for i in range(3):
+        if local[i] < remote[i]:
+            return True
+    return False
 
 
 def __update__():
@@ -95,9 +106,11 @@ def __update__():
     # checking existence and validation of `swagger-ui` key value
     if "swagger-ui" not in package:
         colors.print_err("Not found 'swagger-ui' in 'package.json'.")
-        package["swagger-ui"] = "0"
-    elif str(package["swagger-ui"]).startswith("v") or len(str(package["swagger-ui"]).split(".")) != 3 or False in [x.isdigit() for x in str(package["swagger-ui"]).split(".")]:
-        colors.panic("Invalid 'swagger-ui' value in 'package.json' ({}).".format(package["swagger-ui"]))
+        package["swagger-ui"] = "0.0.0"
+    elif str(package["swagger-ui"]).startswith("v") or len(str(package["swagger-ui"]).split(".")) != 3 or False in [
+         x.isdigit() for x in str(package["swagger-ui"]).split(".")]:
+        colors.print_err("Invalid 'swagger-ui' value found in 'package.json' ({}).".format(package["swagger-ui"]))
+        package["swagger-ui"] = "0.0.0"
 
     # existence and fix `api-doc` path
     if "api-doc" in package:
@@ -125,7 +138,6 @@ def __update__():
     if "tag_name" not in data or "tarball_url" not in data:
         colors.panic("Invalid response received from Github.")
 
-
     """
     Check for latest release version
     if update is available:
@@ -134,7 +146,7 @@ def __update__():
       3. move `dist` directory contents to `api-doc` provided path
       4. remove both archive package and unnecessary extracted files  
     """
-    if package["swagger-ui"] < data["tag_name"][1:]:
+    if __newer_version_exists(local=package["swagger-ui"], remote=data["tag_name"][1:]):
         colors.warning("Newer release found ({})".format(data["tag_name"]))
         colors.warning("Downloading tar package... ({})".format(data["tarball_url"]))
 
@@ -171,7 +183,9 @@ def __update__():
         colors.success("'package.json' updated.")
 
     else:
-        colors.success("No updates found for package `swagger-ui`. Current: {} - Latest: {}".format(package["swagger-ui"], data["tag_name"][1:]))
+        colors.success(
+            "No updates found for package `swagger-ui`. Current: {} - Latest: {}".format(package["swagger-ui"],
+                                                                                         data["tag_name"][1:]))
 
 
 if __name__ == "__main__":
